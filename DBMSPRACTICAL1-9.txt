@@ -1,0 +1,569 @@
+/********** PRACTICAL 1 ***********/
+CREATE TABLE branch_master (
+    branch_id INT PRIMARY KEY,
+    branch_name VARCHAR(50)
+);
+
+CREATE TABLE employee_master (
+    emp_id INT PRIMARY KEY,
+    first_name VARCHAR(30),
+    middle VARCHAR(30),
+    last_name VARCHAR(30),
+    department VARCHAR(50),
+    manager_id INT,
+    FOREIGN KEY (manager_id) REFERENCES employee_master(emp_id)
+);
+
+INSERT INTO branch_master (branch_id, branch_name) VALUES
+(1, 'Head Office'),
+(2, 'IT Department'),
+(3, 'Finance Department'),
+(4, 'HR Department');
+
+INSERT INTO employee_master (emp_id, first_name, middle, last_name, department, manager_id) VALUES
+(101, 'Amit', 'Kumar', 'Sharma', 'IT', NULL),
+(102, 'Riya', 'S.', 'Patel', 'Finance', 101),
+(103, 'Suresh', 'M.', 'Verma', 'HR', 101),
+(104, 'Neha', 'R.', 'Singh', 'IT', 101),
+(105, 'Karan', 'L.', 'Joshi', 'Finance', 102);
+
+CREATE INDEX idx_emp_firstname
+ON employee_master (first_name);
+
+CREATE INDEX idx_emp_fullname
+ON employee_master (first_name, middle, last_name);
+
+CREATE VIEW employee_details AS
+SELECT 
+    emp_id,
+    CONCAT(first_name, ' ', middle, ' ', last_name) AS full_name,
+    department,
+    manager_id
+FROM employee_master;
+
+SELECT * FROM employee_details;
+
+/************** practical 2 **************/
+
+CREATE TABLE Student (
+    stud_id INT PRIMARY KEY,
+    deptnm VARCHAR(50),
+    SEM INT,
+    yr INT,
+    credits INT
+);
+
+CREATE TABLE Teaches (
+    teacher_id INT PRIMARY KEY,
+    teacher_name VARCHAR(50),
+    salary DECIMAL(10,2),
+    deptnm VARCHAR(50)
+);
+
+INSERT INTO Student (stud_id, deptnm, SEM, yr, credits) VALUES
+(1, 'Comp', 3, 2023, 22),
+(2, 'IT', 2, 2023, 18),
+(3, 'Comp', 1, 2024, 15),
+(4, 'Mech', 4, 2023, 28),
+(5, 'Comp', 2, 2024, 20);
+
+INSERT INTO Teaches (teacher_id, teacher_name, salary, deptnm) VALUES
+(101, 'Amit Sharma', 2500, 'Comp'),
+(102, 'Riya Patel', 1800, 'IT'),
+(103, 'Suresh Verma', 3200, 'Mech'),
+(104, 'Neha Singh', 2100, 'Comp'),
+(105, 'Karan Joshi', 2700, 'IT');
+
+UPDATE Student
+SET deptnm = 'IT'
+WHERE deptnm = 'Comp';
+
+SELECT deptnm, MAX(salary) AS Highest_Salary
+FROM Teaches
+GROUP BY deptnm
+ORDER BY Highest_Salary DESC
+LIMIT 1;
+
+select dname,max(salary) as hs
+from tbl group by dname  order by sal desc limit 1;
+
+SELECT deptnm, AVG(salary) AS Average_Salary
+FROM Teaches
+GROUP BY deptnm;
+
+DELETE FROM Teaches
+WHERE salary < 2000;
+
+SELECT deptnm, SUM(salary) AS Total_Salary
+FROM Teaches
+GROUP BY deptnm;
+
+/************ practical 3 ****************/
+
+CREATE TABLE Dept (
+    deptId INT PRIMARY KEY,
+    deptName VARCHAR(10)
+);
+
+CREATE TABLE Emp (
+    empId INT PRIMARY KEY,
+    empName VARCHAR(10),
+    empSal INT,
+    empDeptId INT,
+    FOREIGN KEY (empDeptId) REFERENCES Dept(deptId)
+);
+
+ALTER TABLE Emp
+MODIFY empName VARCHAR(10) NOT NULL;
+
+INSERT INTO Dept (deptId, deptName) VALUES
+(1, 'IT'),
+(2, 'HR'),
+(3, 'Finance');
+
+INSERT INTO Emp (empId, empName, empSal, empDeptId) VALUES
+(101, 'Amit', 25000, 1),
+(102, 'Riya', 30000, 2),
+(103, 'Suresh', 28000, 3),
+(104, 'Neha', 32000, 1);
+
+ALTER TABLE Dept
+ADD deptLoc VARCHAR(10);
+
+ALTER TABLE Dept
+ADD CONSTRAINT unique_deptLoc UNIQUE (deptLoc);
+
+/************ practical 4 ****************/
+
+CREATE TABLE Dept1 (
+    deptId INT PRIMARY KEY,
+    deptName VARCHAR(10)
+);
+CREATE TABLE Emp1 (
+    empId INT PRIMARY KEY,
+    empName VARCHAR(10),
+    empSal INT,
+    empDeptId INT,
+    FOREIGN KEY (empDeptId) REFERENCES Dept1(deptId)
+);
+
+INSERT INTO Dept1 (deptId, deptName) VALUES
+(10, 'IT'),
+(20, 'HR'),
+(30, 'Finance'),
+(40, 'Sales');
+
+INSERT INTO Emp1 (empId, empName, empSal, empDeptId) VALUES
+(101, 'Amit', 12000, 10),
+(102, 'Riya', 25000, 30),
+(103, 'Suresh', 18000, 40),
+(104, 'Neha', 32000, 10),
+(105, 'Karan', 15000, 20),
+(106, 'Divya', 28000, 40);
+
+SELECT * 
+FROM Emp1
+WHERE empDeptId IN (10, 30, 40);
+
+SELECT * 
+FROM Emp1
+WHERE empSal BETWEEN 10000 AND 30000;
+
+SELECT COUNT(*) AS Total_Employees 
+FROM Emp1;
+
+SELECT empDeptId, AVG(empSal) AS Average_Salary
+FROM Emp1
+GROUP BY empDeptId;
+
+SELECT * 
+FROM Emp1
+ORDER BY empSal ASC;
+
+/***************practical 5*****************/
+
+CREATE TABLE Borrower (
+    Roll_no INT PRIMARY KEY,
+    Name VARCHAR(50),
+    DateOfIssue DATE,
+    NameOfBook VARCHAR(100),
+    Status CHAR(1)       
+);
+
+CREATE TABLE Fine (
+    Roll_no INT,
+    Date DATE,
+    Amt INT
+);
+
+INSERT INTO Borrower VALUES
+(101, 'Amit', '2025-10-01', 'DBMS', 'I'),
+(102, 'Riya', '2025-09-15', 'JAVA', 'I'),
+(103, 'Neha', '2025-10-25', 'OS', 'I');
+
+DELIMITER $$
+
+CREATE PROCEDURE calc_fine(IN rno INT, IN bname VARCHAR(50))
+BEGIN
+    DECLARE issueDate DATE;
+    DECLARE days INT;
+    DECLARE fine INT DEFAULT 0;
+
+    SELECT DateOfIssue INTO issueDate
+    FROM Borrower
+    WHERE Roll_no = rno AND NameOfBook = bname;
+
+    SET days = DATEDIFF(CURDATE(), issueDate);
+
+
+    IF days > 30 THEN
+        SET fine = days * 50;
+    ELSEIF days > 15 THEN
+        SET fine = days * 5;
+    END IF;
+
+
+    UPDATE Borrower SET Status = 'R'
+    WHERE Roll_no = rno AND NameOfBook = bname;
+
+
+    IF fine > 0 THEN
+        INSERT INTO Fine VALUES (rno, CURDATE(), fine);
+    END IF;
+
+    SELECT rno AS Roll_No, bname AS Book, days AS Days_Late, fine AS Fine_Amount;
+END$$
+
+DELIMITER ;
+
+CALL calc_fine(101, 'DBMS');
+
+SELECT * FROM Fine;
+
+/***********************practical 6 *************/
+
+
+CREATE TABLE Stud_Marks (
+    Roll INT PRIMARY KEY AUTO_INCREMENT,
+    Name VARCHAR(50),
+    Total_Marks INT
+);
+
+CREATE TABLE Result (
+    Roll INT,
+    Name VARCHAR(50),
+    Class VARCHAR(30)
+);
+
+
+INSERT INTO Stud_Marks (Name, Total_Marks) VALUES
+('Amit', 1200),
+('Riya', 950),
+('Neha', 870),
+('Karan', 800);
+
+DELIMITER $$
+
+CREATE PROCEDURE proc_Grade()
+BEGIN
+    DECLARE done INT DEFAULT 0;
+    DECLARE sRoll INT;
+    DECLARE sName VARCHAR(50);
+    DECLARE sMarks INT;
+    DECLARE grade VARCHAR(30);
+
+    DECLARE stud_cursor CURSOR FOR
+        SELECT Roll, Name, Total_Marks FROM Stud_Marks;
+
+    DECLARE CONTINUE HANDLER FOR NOT FOUND SET done = 1;
+
+
+    DELETE FROM Result;
+
+    OPEN stud_cursor;
+
+    read_loop: LOOP
+        FETCH stud_cursor INTO sRoll, sName, sMarks;
+        IF done THEN
+            LEAVE read_loop;
+        END IF;
+
+
+        IF sMarks BETWEEN 990 AND 1500 THEN
+            SET grade = 'Distinction';
+        ELSEIF sMarks BETWEEN 900 AND 989 THEN
+            SET grade = 'First Class';
+        ELSEIF sMarks BETWEEN 825 AND 899 THEN
+            SET grade = 'Higher Second Class';
+        ELSE
+            SET grade = 'Fail';
+        END IF;
+        INSERT INTO Result VALUES (sRoll, sName, grade);
+    END LOOP;
+
+    CLOSE stud_cursor;
+END$$
+DELIMITER ;
+CALL proc_Grade();
+
+SELECT * FROM Result;
+
+/************** practical 7 ******************/
+
+CREATE TABLE stud21 (
+    roll INT PRIMARY KEY,
+    att INT,
+    status CHAR(1)
+);
+
+CREATE TABLE d_stud (
+    roll INT,
+    att INT
+);
+
+INSERT INTO stud21 VALUES
+(1, 80, 'P'),
+(2, 60, 'P'),
+(3, 72, 'P'),
+(4, 90, 'P'),
+(5, 65, 'P');
+
+DELIMITER $$
+
+CREATE PROCEDURE mark_detained()
+BEGIN
+    DECLARE done INT DEFAULT 0;
+    DECLARE r_roll INT;
+    DECLARE r_att INT;
+
+    DECLARE cur CURSOR FOR 
+        SELECT roll, att FROM stud21 WHERE att < 75;
+
+    DECLARE CONTINUE HANDLER FOR NOT FOUND SET done = 1;
+
+    OPEN cur;
+    read_loop: LOOP
+        FETCH cur INTO r_roll, r_att;
+        IF done THEN
+            LEAVE read_loop;
+        END IF;
+
+        UPDATE stud21
+        SET status = 'D'
+        WHERE roll = r_roll;
+
+        INSERT INTO d_stud VALUES (r_roll, r_att);
+    END LOOP;
+    CLOSE cur;
+END$$
+
+DELIMITER ;
+
+CALL mark_detained();
+
+SELECT * FROM stud21;
+SELECT * FROM d_stud;
+
+CREATE TABLE employees (
+    name VARCHAR(50),
+    designation VARCHAR(50),
+    manager_id INT
+);
+
+INSERT INTO employees VALUES
+('Amit', 'CLERK', 130),
+('Ravi', 'MANAGER', 100),
+('Sneha', 'CLERK', 140),
+('John', 'CLERK', 110),
+('Priya', 'ANALYST', 150);
+
+DELIMITER $$
+
+CREATE PROCEDURE show_clerks()
+BEGIN
+    DECLARE done INT DEFAULT 0;
+    DECLARE emp_name VARCHAR(50);
+    DECLARE emp_desig VARCHAR(50);
+    DECLARE emp_mgr INT;
+
+    DECLARE cur CURSOR FOR 
+        SELECT name, designation, manager_id 
+        FROM employees 
+        WHERE designation = 'CLERK' AND manager_id > 120;
+
+    DECLARE CONTINUE HANDLER FOR NOT FOUND SET done = 1;
+
+    OPEN cur;
+    read_loop: LOOP
+        FETCH cur INTO emp_name, emp_desig, emp_mgr;
+        IF done THEN
+            LEAVE read_loop;
+        END IF;
+
+        SELECT emp_name AS Name, emp_desig AS Designation;
+    END LOOP;
+    CLOSE cur;
+END$$
+
+DELIMITER ;
+CALL show_clerks();
+
+/******************** practical 8 *************************/
+
+
+CREATE TABLE N_RollCall (
+    roll INT PRIMARY KEY,
+    name VARCHAR(50)
+);
+
+CREATE TABLE O_RollCall (
+    roll INT PRIMARY KEY,
+    name VARCHAR(50)
+);
+
+INSERT INTO N_RollCall VALUES 
+(1, 'Sakshi'),
+(2, 'Ravi'),
+(3, 'Amit');
+
+INSERT INTO O_RollCall VALUES 
+(2, 'Ravi'),
+(4, 'Sneha');
+
+DELIMITER $$
+
+CREATE PROCEDURE merge_rollcall()
+BEGIN
+    DECLARE done INT DEFAULT 0;
+    DECLARE n_roll INT;
+    DECLARE n_name VARCHAR(50);
+
+    -- Parameterized cursor (takes roll as input)
+    DECLARE cur CURSOR FOR 
+        SELECT roll, name FROM N_RollCall;
+
+    DECLARE CONTINUE HANDLER FOR NOT FOUND SET done = 1;
+
+    OPEN cur;
+    read_loop: LOOP
+        FETCH cur INTO n_roll, n_name;
+        IF done THEN
+            LEAVE read_loop;
+        END IF;
+
+        -- If roll not already in O_RollCall, insert it
+        IF NOT EXISTS (SELECT * FROM O_RollCall WHERE roll = n_roll) THEN
+            INSERT INTO O_RollCall VALUES (n_roll, n_name);
+        END IF;
+    END LOOP;
+    CLOSE cur;
+END$$
+
+DELIMITER ;
+
+CALL merge_rollcall();
+
+SELECT * FROM O_RollCall;
+
+CREATE TABLE employees (
+    name VARCHAR(50),
+    designation VARCHAR(50),
+    manager_id INT
+);
+
+INSERT INTO employees VALUES
+('Amit', 'CLERK', 130),
+('Ravi', 'MANAGER', 100),
+('Sneha', 'CLERK', 140),
+('John', 'CLERK', 110),
+('Priya', 'ANALYST', 150);
+
+DELIMITER $$
+
+CREATE PROCEDURE show_clerks()
+BEGIN
+    DECLARE done INT DEFAULT 0;
+    DECLARE emp_name VARCHAR(50);
+    DECLARE emp_desig VARCHAR(50);
+    DECLARE emp_mgr INT;
+
+    DECLARE cur CURSOR FOR 
+        SELECT name, designation, manager_id 
+        FROM employees 
+        WHERE designation = 'CLERK' AND manager_id > 120;
+
+    DECLARE CONTINUE HANDLER FOR NOT FOUND SET done = 1;
+
+    OPEN cur;
+    read_loop: LOOP
+        FETCH cur INTO emp_name, emp_desig, emp_mgr;
+        IF done THEN
+            LEAVE read_loop;
+        END IF;
+
+        SELECT emp_name AS Name, emp_desig AS Designation;
+    END LOOP;
+    CLOSE cur;
+END$$
+
+DELIMITER ;
+CALL show_clerks();
+
+/*************** practical 9 ********************/
+
+CREATE TABLE borrower (
+    rollin INT PRIMARY KEY,
+    name VARCHAR(50),
+    dateofissue DATE,
+    nameofbook VARCHAR(100),
+    status CHAR(1)
+);
+
+CREATE TABLE library_audit (
+    rollin INT,
+    name VARCHAR(50),
+    dateofissue DATE,
+    nameofbook VARCHAR(100),
+    status CHAR(1),
+    action_time TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    action_type VARCHAR(10)
+);
+
+INSERT INTO borrower VALUES
+(1, 'Sakshi', '2025-10-01', 'DBMS', 'I'),
+(2, 'Ravi', '2025-10-05', 'Networking', 'I'),
+(3, 'Sneha', '2025-10-10', 'Python', 'I');
+
+DELIMITER $$
+
+CREATE TRIGGER before_borrower_update
+BEFORE UPDATE ON borrower
+FOR EACH ROW
+BEGIN
+    INSERT INTO library_audit (rollin, name, dateofissue, nameofbook, status, action_type)
+    VALUES (OLD.rollin, OLD.name, OLD.dateofissue, OLD.nameofbook, OLD.status, 'UPDATE');
+END$$
+
+DELIMITER ;
+DELIMITER $$
+
+CREATE TRIGGER before_borrower_delete
+BEFORE DELETE ON borrower
+FOR EACH ROW
+BEGIN
+    INSERT INTO library_audit (rollin, name, dateofissue, nameofbook, status, action_type)
+    VALUES (OLD.rollin, OLD.name, OLD.dateofissue, OLD.nameofbook, OLD.status, 'DELETE');
+END$$
+
+DELIMITER ;
+
+UPDATE borrower 
+SET status = 'R' 
+WHERE rollin = 1;
+
+DELETE FROM borrower 
+WHERE rollin = 2;
+
+SELECT * FROM borrower;
+SELECT * FROM library_audit;
+
