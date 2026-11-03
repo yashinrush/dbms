@@ -37,3 +37,5 @@ if __name__ == "__main__":
 # Output:
 # Enter N: 4
 # Enter first queen position (row col): 1 2
+
+#Design 8-Queens matrix having first Queen placed. Use backtracking to place remaining Queens to generate the final 8-queen’s matrix.
